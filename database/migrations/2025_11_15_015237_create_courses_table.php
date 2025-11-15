@@ -13,12 +13,22 @@ return new class extends Migration
     {
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->string('slug')->unique();
+            $table->text('description');
+            $table->longText('content');
+            $table->string('duration_semesters');
+            $table->decimal('price', 10, 2)->nullable();
+            $table->string('modality');
+            $table->string('thumbnail_url')->nullable();
+            $table->string('header_image_url')->nullable();
+            $table->boolean('is_featured')->default(false);
             $table->timestamps();
         });
     }
 
     /**
-     * Reverse the migrations.
+     *  Reverse the migrations.
      */
     public function down(): void
     {
