@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\CoordinatorController;
 use App\Http\Controllers\Api\V1\CourseController;
 use App\Http\Controllers\Api\V1\NewsController;
 use Illuminate\Http\Request;
@@ -21,5 +22,9 @@ Route::prefix('v1')->group(function () {
     //? News
     Route::get('/news', [NewsController::class, 'index'])->name('news.index');
     Route::get('/news/{idOrSlug}', [NewsController::class, 'show'])->name('news.show');
+
+    //? Coordenadore
+    Route::get('/coordinators', [CoordinatorController::class, 'index'])->name('coordinators.index');
+    Route::get('/coordinators/{user}', [CoordinatorController::class, 'show'])->name('coordinators.show');
 
 });
