@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
 
             SiteInfoSeeder::class,
 
+            PermissionSeeder::class,
             UserSeeder::class,
             CourseSeeder::class,
             NewsSeeder::class,

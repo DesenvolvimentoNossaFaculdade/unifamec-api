@@ -14,23 +14,25 @@ class CoordinatorController extends Controller
      */
     public function index()
     {
-        $coordinators = User::where('role', 'coordinator')
+        // ****** A CORREÇÃO ESTÁ AQUI ******
+        // Usamos o método 'role' do Spatie
+        $coordinators = User::role('Coordenador')
                             ->orderBy('name', 'asc')
                             ->get();
-
+                            
         return CoordinatorResource::collection($coordinators);
     }
 
     /**
      * Exibe um coordenador específico.
      */
-    public function show(User $user) // Vamos buscar pelo ID
+    public function show(User $user)
     {
-        // Garante que só podemos "ver" um coordenador, não um usuário comum
-        if ($user->role !== 'coordinator') {
+        // ****** A CORREÇÃO ESTÁ AQUI ******
+        if (! $user->hasRole('Coordenador')) {
             abort(404);
         }
-
+        
         return new CoordinatorResource($user);
     }
 }
