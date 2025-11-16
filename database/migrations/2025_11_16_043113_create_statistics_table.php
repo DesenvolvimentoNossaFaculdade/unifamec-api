@@ -8,19 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('pages', function (Blueprint $table) {
+        Schema::create('statistics', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->string('slug')->unique();
-            $table->string('summary')->nullable();
-            $table->longText('content');
-            $table->string('header_image_url')->nullable();
+            $table->integer('value');
+            $table->string('prefix')->nullable();
+            $table->string('suffix')->nullable();
+            $table->integer('order')->default(0); 
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('pages');
+        Schema::dropIfExists('statistics');
     }
 };
