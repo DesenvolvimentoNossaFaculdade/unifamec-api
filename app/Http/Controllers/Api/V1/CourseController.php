@@ -53,4 +53,14 @@ class CourseController extends Controller
     {
         
     }
+
+    /**
+     *  Exibe apenas os cursos marcados como "featured".
+     */
+    public function featured()
+    {
+        $courses = Course::where('is_featured', true)->orderBy('title', 'asc')->get();
+
+        return CourseResource::collection($courses);
+    }
 }

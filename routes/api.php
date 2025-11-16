@@ -23,6 +23,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
     //? GET: Curso.
     Route::get('/courses/{idOrSlug}', [CourseController::class, 'show'])->name('courses.show');
+    Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+    Route::get('/courses/{idOrSlug}', [CourseController::class, 'show'])->name('courses.show');
 
     //? News
     Route::get('/news', [NewsController::class, 'index'])->name('news.index');
