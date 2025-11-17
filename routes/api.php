@@ -95,5 +95,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
         Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
         Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+
+        Route::post('/statistics', [StatisticController::class, 'store'])->name('statistics.store');
+        Route::put('/statistics/{statistic}', [StatisticController::class, 'update'])->name('statistics.update');
+        Route::delete('/statistics/{statistic}', [StatisticController::class, 'destroy'])->name('statistics.destroy');
     });
 });
