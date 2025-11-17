@@ -111,5 +111,9 @@ Route::prefix('v1')->group(function () {
         Route::post('/navigation-links', [NavigationLinkController::class, 'store'])->name('navigation-links.store');
         Route::put('/navigation-links/{navigationLink}', [NavigationLinkController::class, 'update'])->name('navigation-links.update');
         Route::delete('/navigation-links/{navigationLink}', [NavigationLinkController::class, 'destroy'])->name('navigation-links.destroy');
+
+        Route::post('/pages', [PageController::class, 'store'])->name('pages.store');
+        Route::put('/pages/{page}', [PageController::class, 'update'])->name('pages.update');
+        Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
     });
 });
