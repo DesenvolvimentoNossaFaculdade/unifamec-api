@@ -79,5 +79,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/news', [NewsController::class, 'store'])->name('news.store');
         Route::put('/news/{news}', [NewsController::class, 'update'])->name('news.update');
         Route::delete('/news/{news}', [NewsController::class, 'destroy'])->name('news.destroy');
+
+        //? Course (CRUD Cooder)
+        Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
+        Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+        Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
     });
 });

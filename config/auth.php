@@ -46,7 +46,6 @@ return [
             'provider' => 'users',
         ],
         
-        // MUDANÇA 2: Garanta que o 'api' está usando 'sanctum'
         'api' => [
             'driver' => 'sanctum', 
             'provider' => 'users',
