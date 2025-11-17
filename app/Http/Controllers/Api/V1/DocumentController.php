@@ -6,14 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\DocumentResource;
 use App\Models\Document;
 use Illuminate\Http\Request;
-
-// Importe as Habilidades
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Support\Facades\Storage; // 1. IMPORTAR O STORAGE
 
 class DocumentController extends Controller
 {
-    // Use as Habilidades
     use AuthorizesRequests, ValidatesRequests;
 
     /**
@@ -23,7 +21,6 @@ class DocumentController extends Controller
     {
         $query = Document::where('is_active', true)->orderBy('title');
 
-        // Permite filtrar por categoria: /api/v1/documents?category=manual
         if ($request->has('category')) {
             $query->where('category', $request->category);
         }
@@ -32,20 +29,38 @@ class DocumentController extends Controller
     }
 
     /**
-     * Armazena um novo documento (Pedagógico).
+     * Armazena um novo documento (Pedagógico) - AGORA COM UPLOAD
      */
     public function store(Request $request)
     {
         $this->authorize('documentos:gerenciar');
 
+        // 2. VALIDAÇÃO ATUALIZADA
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'file_url' => 'required|string|max:255', // (No futuro, será um upload de arquivo)
             'category' => 'required|string|max:50',
             'is_active' => 'boolean',
+            
+            // Valida o arquivo (PDF, max 10MB)
+            'file_upload' => 'required|file|mimes:pdf|max:10240', 
         ]);
 
-        $document = Document::create($validated);
+        $fileUrl = null;
+
+        // 3. LÓGICA DE UPLOAD
+        if ($request->hasFile('file_upload')) {
+            // Salva o arquivo em 'storage/app/public/documents'
+            $path = $request->file('file_upload')->store('documents', 'public');
+            $fileUrl = Storage::url($path);
+        }
+
+        // 4. Criação
+        $document = Document::create([
+            'title' => $validated['title'],
+            'category' => $validated['category'],
+            'is_active' => $validated['is_active'] ?? true,
+            'file_url' => $fileUrl, // Salva a URL gerada
+        ]);
 
         return (new DocumentResource($document))
                 ->response()
@@ -53,15 +68,17 @@ class DocumentController extends Controller
     }
 
     /**
-     * Exibe um documento (não usaremos, mas o --api criou).
+     * Exibe um documento.
      */
     public function show(Document $document)
     {
+        // Protegendo o 'show' também, caso não deva ser público
+        // $this->authorize('documentos:gerenciar'); 
         return new DocumentResource($document);
     }
 
     /**
-     * Atualiza um documento (Pedagógico).
+     * Atualiza um documento (Pedagógico) - AGORA COM UPLOAD
      */
     public function update(Request $request, Document $document)
     {
@@ -69,12 +86,29 @@ class DocumentController extends Controller
 
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
-            'file_url' => 'sometimes|string|max:255',
             'category' => 'sometimes|string|max:50',
             'is_active' => 'sometimes|boolean',
+            'file_upload' => 'nullable|file|mimes:pdf|max:10240',
+            'clear_file' => 'nullable|boolean',
         ]);
+        
+        $updateData = $request->only(['title', 'category', 'is_active']);
 
-        $document->update($validated);
+        // Lógica de Upload
+        if ($request->hasFile('file_upload')) {
+            // Apaga o arquivo antigo
+            if ($document->file_url) { Storage::disk('public')->delete(str_replace(Storage::url(''), '', $document->file_url)); }
+            
+            // Salva o novo arquivo
+            $path = $request->file('file_upload')->store('documents', 'public');
+            $updateData['file_url'] = Storage::url($path);
+            
+        } elseif ($request->input('clear_file') == true) {
+             if ($document->file_url) { Storage::disk('public')->delete(str_replace(Storage::url(''), '', $document->file_url)); }
+            $updateData['file_url'] = null;
+        }
+
+        $document->update($updateData);
 
         return new DocumentResource($document);
     }
@@ -85,6 +119,12 @@ class DocumentController extends Controller
     public function destroy(Document $document)
     {
         $this->authorize('documentos:gerenciar');
+
+        // Apaga o arquivo do storage
+        if ($document->file_url) {
+            Storage::disk('public')->delete(str_replace(Storage::url(''), '', $document->file_url));
+        }
+
         $document->delete();
         return response()->json(null, 204);
     }
