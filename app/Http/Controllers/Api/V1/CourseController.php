@@ -6,26 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\V1\CourseResource;
 use App\Models\Course;
 use Illuminate\Http\Request;
-
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Support\Facades\Storage; // 1. IMPORTAR O STORAGE
 
 class CourseController extends Controller
 {
     use AuthorizesRequests, ValidatesRequests;
 
-    /**
-     * Exibe uma lista de todos os cursos.
-     */
+    // ... (index, featured, show - permanecem iguais) ...
+
     public function index()
     {
         $courses = Course::orderBy('title', 'asc')->get();
         return CourseResource::collection($courses);
     }
 
-    /**
-     * Exibe apenas os cursos marcados como "featured".
-     */
     public function featured()
     {
         $courses = Course::where('is_featured', true)
@@ -35,9 +31,6 @@ class CourseController extends Controller
         return CourseResource::collection($courses);
     }
 
-    /**
-     * Exibe um curso específico pelo ID ou Slug.
-     */
     public function show(string $idOrSlug)
     {
         $course = Course::where('id', $idOrSlug)
@@ -48,14 +41,13 @@ class CourseController extends Controller
     }
 
     /**
-     * Armazena um novo curso (Pedagógico).
+     * Armazena um novo curso (Pedagógico) - AGORA COM UPLOAD
      */
     public function store(Request $request)
     {
-        // 1. Autorização
         $this->authorize('cursos:gerenciar');
 
-        // 2. Validação
+        // 2. VALIDAÇÃO ATUALIZADA
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
@@ -64,23 +56,47 @@ class CourseController extends Controller
             'modality' => 'required|string',
             'price' => 'nullable|numeric|min:0',
             'is_featured' => 'boolean',
+            'thumbnail_file' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'header_image_file' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        // 3. Criação
-        $course = Course::create($validated);
+        $thumbnailUrl = null;
+        $headerImageUrl = null;
 
-        // 4. Retorno
+        // 3. LÓGICA DE UPLOAD
+        if ($request->hasFile('thumbnail_file')) {
+            $path = $request->file('thumbnail_file')->store('courses', 'public');
+            $thumbnailUrl = Storage::url($path);
+        }
+        if ($request->hasFile('header_image_file')) {
+            $path = $request->file('header_image_file')->store('courses', 'public');
+            $headerImageUrl = Storage::url($path);
+        }
+
+        // 4. Criação
+        $course = Course::create([
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'content' => $validated['content'],
+            'duration_semesters' => $validated['duration_semesters'],
+            'modality' => $validated['modality'],
+            'price' => $validated['price'] ?? null,
+            'is_featured' => $validated['is_featured'] ?? false,
+            'thumbnail_url' => $thumbnailUrl,
+            'header_image_url' => $headerImageUrl,
+        ]);
+
         return (new CourseResource($course))
                 ->response()
                 ->setStatusCode(201);
     }
 
     /**
-     * Atualiza um curso (Lógica "UAU" de Permissão).
+     * Atualiza um curso (Lógica "UAU" com Upload).
      */
     public function update(Request $request, Course $course)
     {
-        // 1. Autorização Mínima (Tem que ter PELO MENOS uma permissão de curso)
+        // 1. Autorização Mínima
         if (
             !auth()->user()->can('cursos:gerenciar') &&
             !auth()->user()->can('cursos:editar-preco') &&
@@ -89,27 +105,27 @@ class CourseController extends Controller
             abort(403, 'Você não tem permissão para editar cursos.');
         }
 
-        // 2. Validação (campos são opcionais)
+        // 2. VALIDAÇÃO ATUALIZADA
         $validated = $request->validate([
-            // (Campos do Pedagógico)
             'title' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
             'content' => 'sometimes|string',
             'duration_semesters' => 'sometimes|string',
             'modality' => 'sometimes|string',
             'is_featured' => 'sometimes|boolean',
-            
-            // (Campo da Secretaria)
             'price' => 'sometimes|numeric|min:0',
-
-            // (Campos do Marketing) - (thumbnail_url é a 'coverUrl')
-            'thumbnail_url' => 'sometimes|string|max:255',
-            'header_image_url' => 'sometimes|string|max:255',
+            
+            // Campos de Imagem (Marketing)
+            'thumbnail_file' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'header_image_file' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'clear_thumbnail' => 'nullable|boolean',
+            'clear_header_image' => 'nullable|boolean',
         ]);
 
-        // 3. Lógica de Permissão "UAU"
         $dataToUpdate = [];
 
+        // 3. LÓGICA DE PERMISSÃO "UAU"
+        
         // Pedagógico (Conteúdo)
         if (auth()->user()->can('cursos:gerenciar')) {
             $dataToUpdate = array_merge($dataToUpdate, $request->only([
@@ -124,24 +140,37 @@ class CourseController extends Controller
 
         // Marketing (Imagens)
         if (auth()->user()->can('cursos:editar-imagem')) {
-            $dataToUpdate = array_merge($dataToUpdate, $request->only([
-                'thumbnail_url', 'header_image_url'
-            ]));
+            // Lógica de Upload para Thumbnail
+            if ($request->hasFile('thumbnail_file')) {
+                if ($course->thumbnail_url) { Storage::disk('public')->delete(str_replace(Storage::url(''), '', $course->thumbnail_url)); }
+                $path = $request->file('thumbnail_file')->store('courses', 'public');
+                $dataToUpdate['thumbnail_url'] = Storage::url($path);
+            } elseif ($request->input('clear_thumbnail') == true) {
+                if ($course->thumbnail_url) { Storage::disk('public')->delete(str_replace(Storage::url(''), '', $course->thumbnail_url)); }
+                $dataToUpdate['thumbnail_url'] = null;
+            }
+
+            // Lógica de Upload para Header Image
+            if ($request->hasFile('header_image_file')) {
+                if ($course->header_image_url) { Storage::disk('public')->delete(str_replace(Storage::url(''), '', $course->header_image_url)); }
+                $path = $request->file('header_image_file')->store('courses', 'public');
+                $dataToUpdate['header_image_url'] = Storage::url($path);
+            } elseif ($request->input('clear_header_image') == true) {
+                if ($course->header_image_url) { Storage::disk('public')->delete(str_replace(Storage::url(''), '', $course->header_image_url)); }
+                $dataToUpdate['header_image_url'] = null;
+            }
         }
 
         // 4. Checagem de Segurança
-        // Se o usuário mandou dados que ele NÃO PODE editar, $dataToUpdate
-        // será menor que $validated.
-        
-        // (Filtra chaves nulas do request)
-        $requestedData = array_filter($validated, function($key) use ($request) {
-            return $request->has($key);
-        }, ARRAY_FILTER_USE_KEY);
-        
+        // (Remove os campos de 'clear' e 'file' da contagem de validação)
+        $validatedKeys = array_keys($validated);
+        $fileKeys = ['thumbnail_file', 'header_image_file', 'clear_thumbnail', 'clear_header_image'];
+        $requestedData = array_diff_key($validated, array_flip($fileKeys));
+
         if (count($dataToUpdate) < count($requestedData)) {
-            abort(403, 'Você está tentando atualizar campos que não tem permissão.');
+             abort(403, 'Você está tentando atualizar campos que não tem permissão.');
         }
-        
+
         // 5. Atualização
         $course->update($dataToUpdate);
 
@@ -154,13 +183,14 @@ class CourseController extends Controller
      */
     public function destroy(Course $course)
     {
-        // 1. Autorização
         $this->authorize('cursos:gerenciar');
 
-        // 2. Deleção
+        // Apaga as imagens junto
+        if ($course->thumbnail_url) { Storage::disk('public')->delete(str_replace(Storage::url(''), '', $course->thumbnail_url)); }
+        if ($course->header_image_url) { Storage::disk('public')->delete(str_replace(Storage::url(''), '', $course->header_image_url)); }
+
         $course->delete();
 
-        // 3. Retorno
         return response()->json(null, 204);
     }
 }
