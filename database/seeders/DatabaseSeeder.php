@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             HeroSlideSeeder::class,
             NavigationSeeder::class,
             DocumentSeeder::class,
+            GallerySeeder::class,
         ]);
     }
 }

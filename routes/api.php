@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\V1\SiteInfoController;
 use App\Http\Controllers\Api\V1\NavigationMenuController;
 use App\Http\Controllers\Api\V1\NavigationLinkController;
 use App\Http\Controllers\Api\V1\DocumentController;
+use App\Http\Controllers\Api\V1\GalleryCategoryController;
+use App\Http\Controllers\Api\V1\GalleryImageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -64,6 +66,9 @@ Route::prefix('v1')->group(function () {
     //? Documentação
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
 
+    Route::get('/gallery/categories', [GalleryCategoryController::class, 'index'])->name('gallery.categories.index');
+    Route::get('/gallery/images', [GalleryImageController::class, 'index'])->name('gallery.images.index');
+
 
     // --- ROTAS PROTEGIDAS (AUTH) ---
     // (Tudo aqui dentro exige um Token de Login)
@@ -115,5 +120,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/pages', [PageController::class, 'store'])->name('pages.store');
         Route::put('/pages/{page}', [PageController::class, 'update'])->name('pages.update');
         Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
+
+        Route::post('/gallery/categories', [GalleryCategoryController::class, 'store'])->name('gallery.categories.store');
+        Route::put('/gallery/categories/{galleryCategory}', [GalleryCategoryController::class, 'update'])->name('gallery.categories.update');
+        Route::delete('/gallery/categories/{galleryCategory}', [GalleryCategoryController::class, 'destroy'])->name('gallery.categories.destroy');
+
+        Route::post('/gallery/images', [GalleryImageController::class, 'store'])->name('gallery.images.store');
+        Route::put('/gallery/images/{galleryImage}', [GalleryImageController::class, 'update'])->name('gallery.images.update');
+        Route::delete('/gallery/images/{galleryImage}', [GalleryImageController::class, 'destroy'])->name('gallery.images.destroy');
     });
 });

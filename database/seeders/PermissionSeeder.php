@@ -6,23 +6,25 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\PermissionRegistrar;
+use Spatie\Permission\PermissionRegistrar; // Importe a classe aqui
 
 class PermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Limpa o cache inicial (Boa prática)
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $guard = 'api';
 
         // --- 1. CRIAR TODAS AS PERMISSÕES PRIMEIRO ---
         Permission::create(['guard_name' => $guard, 'name' => 'noticias:gerenciar']);
-        Permission::create(['guard_name' => $guard, 'name' => 'banners:gerenciar']);
+        
+        // RENOMEADO: De 'banners' para 'hero'
+        Permission::create(['guard_name' => $guard, 'name' => 'hero:gerenciar']); 
+        
+        // NOVO: Permissão da Galeria
+        Permission::create(['guard_name' => $guard, 'name' => 'galeria:gerenciar']);
+
         Permission::create(['guard_name' => $guard, 'name' => 'cursos:gerenciar']);
         Permission::create(['guard_name' => $guard, 'name' => 'cursos:editar-preco']);
         Permission::create(['guard_name' => $guard, 'name' => 'documentos:gerenciar']);
@@ -30,17 +32,16 @@ class PermissionSeeder extends Seeder
         Permission::create(['guard_name' => $guard, 'name' => 'config:gerenciar']);
 
         // --- 2. RESETAR O CACHE DE NOVO ---
-        // ****** ESTA É A CORREÇÃO MÁGICA ******
-        // Força o Spatie a reler o banco e "ver" as permissões que acabamos de criar.
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // --- 3. CRIAR PAPÉIS E ATRIBUIR AS PERMISSÕES (AGORA VAI) ---
+        // --- 3. CRIAR PAPÉIS E ATRIBUIR AS PERMISSÕES ---
         
         // Papel Marketing
         $marketing = Role::create(['guard_name' => $guard, 'name' => 'Marketing']);
         $marketing->givePermissionTo([
             'noticias:gerenciar',
-            'banners:gerenciar',
+            'hero:gerenciar', // <-- ATUALIZADO
+            'galeria:gerenciar', // <-- NOVO
         ]);
 
         // Papel Pedagógico

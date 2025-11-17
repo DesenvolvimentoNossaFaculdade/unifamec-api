@@ -11,30 +11,29 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Auth;
 
-
 class HeroSlideController extends Controller
 {
-
     use AuthorizesRequests, ValidatesRequests;
 
     /**
-     * Exibe os slides ativos do hero.
+     * Exibe os slides ativos do hero. (PÚBLICO)
      */
     public function index()
     {
         $slides = HeroSlide::where('is_active', true)
                            ->orderBy('order', 'asc')
                            ->get();
-
+                           
         return HeroSlideResource::collection($slides);
     }
 
     /**
-     * Armazenando um novo Slide
+     * Armazena um novo slide (Marketing).
      */
     public function store(Request $request)
     {
-        $this->authorize('banners:gerenciar');
+        // ATUALIZADO para 'hero:gerenciar'
+        $this->authorize('hero:gerenciar');
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -54,16 +53,14 @@ class HeroSlideController extends Controller
                 ->setStatusCode(201);
     }
 
-
     /**
      * Atualiza um slide (Marketing).
      */
     public function update(Request $request, HeroSlide $heroSlide)
     {
-        // 1. Autorização
-        $this->authorize('banners:gerenciar');
+        // ATUALIZADO para 'hero:gerenciar'
+        $this->authorize('hero:gerenciar');
 
-        // 2. Validação
         $validated = $request->validate([
             'title' => 'sometimes|string|max:255',
             'subtitle' => 'sometimes|string',
@@ -85,13 +82,9 @@ class HeroSlideController extends Controller
      */
     public function destroy(HeroSlide $heroSlide)
     {
-        // 1. Autorização
-        $this->authorize('banners:gerenciar');
-
-        // 2. Deleção
+        // ATUALIZADO para 'hero:gerenciar'
+        $this->authorize('hero:gerenciar');
         $heroSlide->delete();
-
-        // 3. Retorno
         return response()->json(null, 204);
     }
 }
