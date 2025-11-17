@@ -1,5 +1,6 @@
 <?php
 
+// --- Todos os 'use' statements ---
 use App\Http\Controllers\Api\V1\CoordinatorController;
 use App\Http\Controllers\Api\V1\CourseController;
 use App\Http\Controllers\Api\V1\NewsController;
@@ -8,22 +9,20 @@ use App\Http\Controllers\Api\V1\StatisticController;
 use App\Http\Controllers\Api\V1\HeroSlideController;
 use App\Http\Controllers\Api\V1\SiteInfoController;
 use App\Http\Controllers\Api\V1\NavigationMenuController;
-use App\Http\Controllers\Api\V1\NavigationLinkController;
 use App\Http\Controllers\Api\V1\DocumentController;
+use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\AuditLogController;
 use App\Http\Controllers\Api\V1\GalleryCategoryController;
 use App\Http\Controllers\Api\V1\GalleryImageController;
+use App\Http\Controllers\Api\V1\NavigationLinkController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\V1\AuthController;
-
-// *** LINHA QUE FALTAVA ***
-use App\Http\Controllers\Api\V1\AuditLogController;
 
 // ===============================================
 // ROTA PÚBLICA DE LOGIN
 // ===============================================
-// URL: POST /api/v1/login
 Route::post('/v1/login', [AuthController::class, 'login'])->name('login');
+
 
 // ===============================================
 // GRUPO DE ROTAS V1
@@ -31,102 +30,72 @@ Route::post('/v1/login', [AuthController::class, 'login'])->name('login');
 Route::prefix('v1')->group(function () {
     
     // --- ROTAS PÚBLICAS (GET) ---
-    // (Tudo que seu Next.js precisa para exibir o site)
+    // (O que o Next.js lê)
     
-    //? Cursos
     Route::get('/courses/featured', [CourseController::class, 'featured'])->name('courses.featured');
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
     Route::get('/courses/{idOrSlug}', [CourseController::class, 'show'])->name('courses.show');
 
-    //? News
     Route::get('/news', [NewsController::class, 'index'])->name('news.index');
     Route::get('/news/{idOrSlug}', [NewsController::class, 'show'])->name('news.show');
 
-    //? Coordenadores
     Route::get('/coordinators', [CoordinatorController::class, 'index'])->name('coordinators.index');
     Route::get('/coordinators/{user}', [CoordinatorController::class, 'show'])->name('coordinators.show');
 
-    //? Pages
     Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show');
     Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
 
-    //? Statistics
     Route::get('/statistics', [StatisticController::class, 'index'])->name('statistics.index');
     
-    //? Hero Slides
     Route::get('/hero-slides', [HeroSlideController::class, 'index'])->name('hero-slides.index');
 
-    //? Site Info
     Route::get('/site-info', [SiteInfoController::class, 'index'])->name('site-info.index');
 
-    //? Navigation
-    Route::get('/navigation/{slug}', [NavigationMenuController::class, 'show'])->name('navigation.show');
     Route::get('/navigation/{slug}', [NavigationMenuController::class, 'show'])->name('navigation.show');
 
-    //? Documentação
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
 
     Route::get('/gallery/categories', [GalleryCategoryController::class, 'index'])->name('gallery.categories.index');
     Route::get('/gallery/images', [GalleryImageController::class, 'index'])->name('gallery.images.index');
 
-
+    
     // --- ROTAS PROTEGIDAS (AUTH) ---
-    // (Tudo aqui dentro exige um Token de Login)
+    // (O que os Papéis podem FAZER)
     Route::middleware('auth:sanctum')->group(function () {
         
-        //? Logout
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-        // *** CORREÇÃO DO TYPO AQUI (Era RouteL) ***
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
-
-        //? Get Logged User
-        Route::get('/user', function (Request $request) {
-            return $request->user();
-        })->name('user.me');
+        Route::get('/user', function (Request $request) { return $request->user(); })->name('user.me');
 
         //? News (CRUD do Marketing)
         Route::post('/news', [NewsController::class, 'store'])->name('news.store');
         Route::put('/news/{news}', [NewsController::class, 'update'])->name('news.update');
         Route::delete('/news/{news}', [NewsController::class, 'destroy'])->name('news.destroy');
 
-        //? Course (CRUD Cooder)
+        //? Course (CRUD Pedagógico/Secretaria/Marketing)
         Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
         Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
         Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
 
+        //? Hero Slides (CRUD Marketing)
         Route::post('/hero-slides', [HeroSlideController::class, 'store'])->name('hero-slides.store');
         Route::put('/hero-slides/{heroSlide}', [HeroSlideController::class, 'update'])->name('hero-slides.update');
         Route::delete('/hero-slides/{heroSlide}', [HeroSlideController::class, 'destroy'])->name('hero-slides.destroy');
 
+        //? Documentos (CRUD Pedagógico)
         Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
         Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
         Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 
-        Route::post('/statistics', [StatisticController::class, 'store'])->name('statistics.store');
-        Route::put('/statistics/{statistic}', [StatisticController::class, 'update'])->name('statistics.update');
-        Route::delete('/statistics/{statistic}', [StatisticController::class, 'destroy'])->name('statistics.destroy');
-
-        Route::put('/site-info', [SiteInfoController::class, 'update'])->name('site-info.update');
-
-        Route::post('/navigation', [NavigationMenuController::class, 'store'])->name('navigation.store');
-        Route::put('/navigation/{navigationMenu}', [NavigationMenuController::class, 'update'])->name('navigation.update');
-        Route::delete('/navigation/{navigationMenu}', [NavigationMenuController::class, 'destroy'])->name('navigation.destroy');
-
-        Route::post('/navigation-links', [NavigationLinkController::class, 'store'])->name('navigation-links.store');
-        Route::put('/navigation-links/{navigationLink}', [NavigationLinkController::class, 'update'])->name('navigation-links.update');
-        Route::delete('/navigation-links/{navigationLink}', [NavigationLinkController::class, 'destroy'])->name('navigation-links.destroy');
-
-        Route::post('/pages', [PageController::class, 'store'])->name('pages.store');
-        Route::put('/pages/{page}', [PageController::class, 'update'])->name('pages.update');
-        Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
-
+        //? Galeria (CRUD Marketing)
         Route::post('/gallery/categories', [GalleryCategoryController::class, 'store'])->name('gallery.categories.store');
         Route::put('/gallery/categories/{galleryCategory}', [GalleryCategoryController::class, 'update'])->name('gallery.categories.update');
         Route::delete('/gallery/categories/{galleryCategory}', [GalleryCategoryController::class, 'destroy'])->name('gallery.categories.destroy');
-
+        
         Route::post('/gallery/images', [GalleryImageController::class, 'store'])->name('gallery.images.store');
         Route::put('/gallery/images/{galleryImage}', [GalleryImageController::class, 'update'])->name('gallery.images.update');
         Route::delete('/gallery/images/{galleryImage}', [GalleryImageController::class, 'destroy'])->name('gallery.images.destroy');
+
+        // ROTAS ESTRUTURAIS REMOVIDAS (Statistics, SiteInfo, Navigation, Pages)
     });
 });
