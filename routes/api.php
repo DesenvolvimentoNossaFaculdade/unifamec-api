@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\StatisticController;
 use App\Http\Controllers\Api\V1\HeroSlideController;
 use App\Http\Controllers\Api\V1\SiteInfoController;
 use App\Http\Controllers\Api\V1\NavigationMenuController;
+use App\Http\Controllers\Api\V1\NavigationLinkController;
 use App\Http\Controllers\Api\V1\DocumentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +59,7 @@ Route::prefix('v1')->group(function () {
 
     //? Navigation
     Route::get('/navigation/{slug}', [NavigationMenuController::class, 'show'])->name('navigation.show');
+    Route::get('/navigation/{slug}', [NavigationMenuController::class, 'show'])->name('navigation.show');
 
     //? Documentação
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
@@ -99,5 +101,15 @@ Route::prefix('v1')->group(function () {
         Route::post('/statistics', [StatisticController::class, 'store'])->name('statistics.store');
         Route::put('/statistics/{statistic}', [StatisticController::class, 'update'])->name('statistics.update');
         Route::delete('/statistics/{statistic}', [StatisticController::class, 'destroy'])->name('statistics.destroy');
+
+        Route::put('/site-info', [SiteInfoController::class, 'update'])->name('site-info.update');
+
+        Route::post('/navigation', [NavigationMenuController::class, 'store'])->name('navigation.store');
+        Route::put('/navigation/{navigationMenu}', [NavigationMenuController::class, 'update'])->name('navigation.update');
+        Route::delete('/navigation/{navigationMenu}', [NavigationMenuController::class, 'destroy'])->name('navigation.destroy');
+
+        Route::post('/navigation-links', [NavigationLinkController::class, 'store'])->name('navigation-links.store');
+        Route::put('/navigation-links/{navigationLink}', [NavigationLinkController::class, 'update'])->name('navigation-links.update');
+        Route::delete('/navigation-links/{navigationLink}', [NavigationLinkController::class, 'destroy'])->name('navigation-links.destroy');
     });
 });
