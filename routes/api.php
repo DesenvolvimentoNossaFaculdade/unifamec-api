@@ -19,7 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // ===============================================
-// ROTA PÚBLICA DE LOGIN (Agora sem CSRF)
+// ROTA PÚBLICA DE LOGIN
 // ===============================================
 Route::post('/v1/login', [AuthController::class, 'login'])->name('login');
 
@@ -30,51 +30,30 @@ Route::post('/v1/login', [AuthController::class, 'login'])->name('login');
 Route::prefix('v1')->group(function () {
     
     // --- ROTAS PÚBLICAS (GET) ---
-    // (O que o Next.js lê)
-    
-    //? Cursos
     Route::get('/courses/featured', [CourseController::class, 'featured'])->name('courses.featured');
     Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
     Route::get('/courses/{idOrSlug}', [CourseController::class, 'show'])->name('courses.show');
-
-    //? News (AS ROTAS QUE FALTAVAM)
     Route::get('/news', [NewsController::class, 'index'])->name('news.index');
     Route::get('/news/{idOrSlug}', [NewsController::class, 'show'])->name('news.show');
-
-    //? Coordenadores
     Route::get('/coordinators', [CoordinatorController::class, 'index'])->name('coordinators.index');
     Route::get('/coordinators/{user}', [CoordinatorController::class, 'show'])->name('coordinators.show');
-
-    //? Pages
     Route::get('/pages/{slug}', [PageController::class, 'show'])->name('pages.show');
     Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
-
-    //? Statistics
     Route::get('/statistics', [StatisticController::class, 'index'])->name('statistics.index');
-    
-    //? Hero Slides
     Route::get('/hero-slides', [HeroSlideController::class, 'index'])->name('hero-slides.index');
-
-    //? Site Info
     Route::get('/site-info', [SiteInfoController::class, 'index'])->name('site-info.index');
-
-    //? Navigation
     Route::get('/navigation/{slug}', [NavigationMenuController::class, 'show'])->name('navigation.show');
-
-    //? Documentos
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
-
-    //? Galeria
     Route::get('/gallery/categories', [GalleryCategoryController::class, 'index'])->name('gallery.categories.index');
     Route::get('/gallery/images', [GalleryImageController::class, 'index'])->name('gallery.images.index');
 
 
     // --- ROTAS PROTEGIDAS (AUTH) ---
-    // (O que os Papéis podem FAZER)
-    Route::middleware([
-        'auth:sanctum',
-        \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-    ])->group(function () {
+    // (O 'auth:sanctum' sozinho já cuida dos Bearer Tokens)
+    
+    // ****** A CORREÇÃO "UAU" ESTÁ AQUI ******
+    // (Removemos o 'EnsureFrontendRequestsAreStateful' do array)
+    Route::middleware('auth:sanctum')->group(function () {
         
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');

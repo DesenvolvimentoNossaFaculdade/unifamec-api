@@ -3,23 +3,19 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\HandleCors;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
-
-        // 1. ATIVAR AS ROTAS DE API (ESTAVA DESABILITADO)
         api: __DIR__.'/../routes/api.php', 
-
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
 
-        // Habilitar o middleware do Sanctum para APIs
-        // $middleware->api(prepend: [
-        //     \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        // ]);
+        // Ativar CORS manualmente
+        $middleware->append(HandleCors::class);
 
     })
     ->withExceptions(function (Exceptions $exceptions) {
