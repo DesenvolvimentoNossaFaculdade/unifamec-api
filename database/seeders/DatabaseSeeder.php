@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
             StatisticSeeder::class,
             HeroSlideSeeder::class,
             NavigationSeeder::class,
+            DocumentSeeder::class,
         ]);
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\StatisticController;
 use App\Http\Controllers\Api\V1\HeroSlideController;
 use App\Http\Controllers\Api\V1\SiteInfoController;
 use App\Http\Controllers\Api\V1\NavigationMenuController;
+use App\Http\Controllers\Api\V1\DocumentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
@@ -20,7 +21,6 @@ use App\Http\Controllers\Api\V1\AuditLogController;
 // ===============================================
 // URL: POST /api/v1/login
 Route::post('/v1/login', [AuthController::class, 'login'])->name('login');
-
 
 // ===============================================
 // GRUPO DE ROTAS V1
@@ -59,6 +59,9 @@ Route::prefix('v1')->group(function () {
     //? Navigation
     Route::get('/navigation/{slug}', [NavigationMenuController::class, 'show'])->name('navigation.show');
 
+    //? Documentação
+    Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+
 
     // --- ROTAS PROTEGIDAS (AUTH) ---
     // (Tudo aqui dentro exige um Token de Login)
@@ -84,5 +87,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
         Route::put('/courses/{course}', [CourseController::class, 'update'])->name('courses.update');
         Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
+
+        Route::post('/hero-slides', [HeroSlideController::class, 'store'])->name('hero-slides.store');
+        Route::put('/hero-slides/{heroSlide}', [HeroSlideController::class, 'update'])->name('hero-slides.update');
+        Route::delete('/hero-slides/{heroSlide}', [HeroSlideController::class, 'destroy'])->name('hero-slides.destroy');
+
+        Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+        Route::put('/documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
+        Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
     });
 });
