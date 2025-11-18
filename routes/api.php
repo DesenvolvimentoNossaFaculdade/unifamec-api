@@ -88,5 +88,5 @@ Route::prefix('v1')->group(function () {
         Route::put('/gallery/images/{galleryImage}', [GalleryImageController::class, 'update'])->name('gallery.images.update');
         Route::delete('/gallery/images/{galleryImage}', [GalleryImageController::class, 'destroy'])->name('gallery.images.destroy');
         
-    }); // Fim do grupo 'auth:sanctum'
-}); // Fim do grupo 'v1'
+    });
+});

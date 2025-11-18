@@ -4,13 +4,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | API CORS (Cross-Origin Resource Sharing) Configuration
+    | Cross-Origin Resource Sharing (CORS) Configuration
     |--------------------------------------------------------------------------
+    |
+    | Here you may configure your settings for cross-origin resource sharing
+    | or "CORS". This determines what cross-origin operations may execute
+    | in web browsers. You are free to adjust these settings as needed.
+    |
+    | To learn more: https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+    |
     */
 
-    // --- 1. A CORREÇÃO "UAU" ESTÁ AQUI ---
-    // Adicione 'storage/*' à lista de caminhos permitidos.
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'storage/*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
     'allowed_methods' => ['*'],
 
