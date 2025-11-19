@@ -10,63 +10,68 @@ use Spatie\Permission\PermissionRegistrar;
 
 class PermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Limpa o cache inicial
+        // Limpa cache do Spatie para evitar bugs de cache
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
-
-        $guard = 'api';
-
-        // --- 1. CRIAR TODAS AS PERMISSÕES PRIMEIRO ---
-        Permission::create(['guard_name' => $guard, 'name' => 'noticias:gerenciar']);
-        Permission::create(['guard_name' => $guard, 'name' => 'hero:gerenciar']);
-        Permission::create(['guard_name' => $guard, 'name' => 'galeria:gerenciar']);
-        Permission::create(['guard_name' => $guard, 'name' => 'cursos:gerenciar']); // (Pedagógico)
-        Permission::create(['guard_name' => $guard, 'name' => 'cursos:editar-preco']); // (Secretaria)
         
-        // --- NOVO ---
-        Permission::create(['guard_name' => $guard, 'name' => 'cursos:editar-imagem']); // (Marketing)
-        
-        Permission::create(['guard_name' => $guard, 'name' => 'documentos:gerenciar']);
-        
-        // (Permissões agora sem uso, mas não há problema em mantê-las)
-        Permission::create(['guard_name' => $guard, 'name' => 'paginas:gerenciar']);
-        Permission::create(['guard_name' => $guard, 'name' => 'config:gerenciar']);
+        $guard = 'api'; // Como estamos usando Next.js + Laravel API
 
-        // --- 2. RESETAR O CACHE DE NOVO ---
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
-
-        // --- 3. CRIAR PAPÉIS E ATRIBUIR AS PERMISSÕES ---
-        
-        // Papel Marketing
-        $marketing = Role::create(['guard_name' => $guard, 'name' => 'Marketing']);
-        $marketing->givePermissionTo([
+        // --- 1. CRIAR TODAS AS PERMISSÕES ---
+        $permissions = [
             'noticias:gerenciar',
             'hero:gerenciar',
             'galeria:gerenciar',
-            'cursos:editar-imagem', // <-- ATRIBUÍDO AO MARKETING
-        ]);
+            'cursos:gerenciar',
+            'cursos:editar-preco',
+            'cursos:editar-imagem',
+            'documentos:gerenciar',
+            'paginas:gerenciar',
+            'config:gerenciar',
+            // ADICIONADO: Permissão específica para Locais de Prova
+            'locais-prova:gerenciar', 
+        ];
 
-        // Papel Pedagógico
-        $pedagogico = Role::create(['guard_name' => $guard, 'name' => 'Pedagógico']);
-        $pedagogico->givePermissionTo([
+        foreach ($permissions as $permission) {
+            // createOrFirst evita erro de duplicidade se rodar o seeder 2x
+            Permission::firstOrCreate(['guard_name' => $guard, 'name' => $permission]);
+        }
+
+        // --- 2. ATRIBUIR AOS PAPÉIS ---
+        
+        // MARKETING
+        $marketing = Role::firstOrCreate(['guard_name' => $guard, 'name' => 'Marketing']);
+        $marketing->syncPermissions([ // syncPermissions remove as antigas e põe as novas
+            'noticias:gerenciar',
+            'hero:gerenciar',
+            'galeria:gerenciar',
             'cursos:gerenciar',
             'documentos:gerenciar',
         ]);
+
+        // PEDAGÓGICO
+        $pedagogico = Role::firstOrCreate(['guard_name' => $guard, 'name' => 'Pedagógico']);
+        $pedagogico->syncPermissions([
+            'cursos:gerenciar',
+            'documentos:gerenciar',
+            'locais-prova:gerenciar', // <--- ELES PODEM GERENCIAR LOCAIS
+        ]);
         
-        // Papel Secretaria
-        $secretaria = Role::create(['guard_name' => $guard, 'name' => 'Secretaria']);
-        $secretaria->givePermissionTo([
+        // SECRETARIA
+        $secretaria = Role::firstOrCreate(['guard_name' => $guard, 'name' => 'Secretaria']);
+        $secretaria->syncPermissions([
             'cursos:editar-preco',
+            'locais-prova:gerenciar', // <--- SECRETARIA TAMBÉM GERALMENTE PODE
         ]);
 
-        // Papel Coordenador
-        $coordenador = Role::create(['guard_name' => $guard, 'name' => 'Coordenador']);
-        
-        // Papel Admin Geral (Super-Admin)
-        $admin = Role::create(['guard_name' => $guard, 'name' => 'Admin Geral']);
+        // COORDENADOR
+        $coordenador = Role::firstOrCreate(['guard_name' => $guard, 'name' => 'Coordenador']);
+        // Dê permissões ao coordenador se necessário
+
+        // ADMIN GERAL (Super Admin)
+        $admin = Role::firstOrCreate(['guard_name' => $guard, 'name' => 'Admin Geral']);
+        // Admin Geral geralmente bypassa tudo via Gate::before no AuthServiceProvider, 
+        // mas se quiser garantir:
+        $admin->syncPermissions(Permission::all());
     }
 }
